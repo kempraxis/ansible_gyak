@@ -1,0 +1,15 @@
+---
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: update repository index
+    apt:
+      update_cache: yes
+
+  - name: Uninstall midnight commander package
+    apt:
+      name: mc
+      state: absent
+
