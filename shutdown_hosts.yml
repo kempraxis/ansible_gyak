@@ -1,0 +1,10 @@
+---
+- hosts: all
+  become: true
+  gather_facts: no
+  tasks:
+  - name: Shutdown tavoli host-ok
+    command: /sbin/shutdown -h now
+
+  - name: wait go down
+    local_action: wait_for host={{ ansible_ssh_host }} port=22 state=stopped
