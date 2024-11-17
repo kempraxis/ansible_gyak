@@ -1,0 +1,45 @@
+---
+# Kulonbozo disztribucio linux szerverek frissitese
+# tesztelve! mukodik!
+- name: Update Linux servers
+  hosts: all
+  become: true
+
+  tasks:
+    # Debian alapu Linux disztribucio frissitese
+    - name: Update Debian-based Linux distributions
+      when: ansible_distribution in ['Debian', 'Ubuntu', 'LinuxMint']
+      ansible.builtin.apt:
+        upgrade: true
+        update_cache: true
+        cache_valid_time: 3600
+
+    # Arch Linux frissitese
+    - name: Update Arch-based Linux distributions
+      when: ansible_distribution == 'Arch Linux'
+      community.general.pacman:
+        update_cache: true
+        upgrade: true
+
+    # CentOS alapu Linux disztribucio frissitese
+    - name: Update CentOS-based Linux distributions
+      when: ansible_distribution in ['CentOS', 'RedHat', 'OracleLinux', 'Amazon']
+      ansible.builtin.yum:
+        name: '*'
+        state: latest
+        update_only: true # csak frissites, de nem telepit additional packages-t.
+
+    # Fedora alapu Linux disztribucio frissitese
+    - name: Update Fedora-based Linux distributions
+      when: ansible_distribution == 'Fedora'
+      ansible.builtin.dnf:
+        name: '*'
+        state: latest
+        update_only: true # csak frissites, de nem telepit additional packages-t.
+
+    # openSUSE alapu Linux disztribucio
+    - name: Update openSUSE-based Linux distributions
+      when: ansible_distribution in ['openSUSE Leap', 'SUSE Linux Enterprise Server']
+      community.general.zypper:
+        name: '*'
+        state: latest
