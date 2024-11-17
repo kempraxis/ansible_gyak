@@ -1,0 +1,51 @@
+---
+# TESZTELVE! MUKODIK!
+# Telepiti Apache2-t Debian alapu linux-okra es elinditja service-t.
+# Telepiti Apache2-t SUSE linux-okra, elinditja service-t es beallitja tuzfalat.
+- name: Install Apache on all servers
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Apache on openSUSE
+      ansible.builtin.zypper:
+        name: apache2
+        state: present
+      when: ansible_distribution in ["openSUSE", "openSUSE Leap"]
+
+    - name: Enable and start Apache on openSUSE
+      ansible.builtin.service:
+        name: apache2
+        state: started
+        enabled: yes
+      when: ansible_distribution in ["openSUSE", "openSUSE Leap"]
+
+    - name: Open HTTP and HTTPS in firewall on openSUSE
+      ansible.builtin.command:
+        cmd: >
+          firewall-cmd --zone=public --permanent --add-service={{ item }}
+      loop:
+        - http
+        - https
+      when: ansible_distribution in ["openSUSE", "openSUSE Leap"]
+
+    - name: Reload firewall on openSUSE
+      ansible.builtin.command:
+        cmd: firewall-cmd --reload
+      when: ansible_distribution in ["openSUSE", "openSUSE Leap"]
+
+
+    - name: Install Apache on Ubuntu
+      ansible.builtin.apt:
+        name: apache2
+        state: present
+        update_cache: yes
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Ensure Apache is enabled and running on Ubuntu
+      ansible.builtin.service:
+        name: apache2
+        state: started
+        enabled: yes
+      when: ansible_distribution == "Ubuntu"
+
+
