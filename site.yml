@@ -18,6 +18,26 @@
       update_cache: yes
     when: ansible_distribution == "Ubuntu"
 
+    # workstations - unzip és terraform
+
+- hosts: workstations
+  become: true
+  tasks:
+
+  - name: install unzip
+    package:
+      name: unzip
+
+  - name: install terraform
+    unarchive:
+      src: https://releases.hashicorp.com/terraform/0.12.28/terraform_0.12.28_linux_amd64.zip
+      dest: /usr/local/bin
+      remote_src: yes
+      mode: 0755
+      owner: root
+      group: root
+
+
     # web_servers      
 
 - hosts: web_servers
@@ -53,15 +73,38 @@
       update_cache: yes
     when: ansible_distribution == "CentOS"
 
+    #apache enable és service indítása CentOS alatt
+
   - name: Start Httpd service
     tags: apache,centos,httpd
     service:
       name: httpd
       state: started
+      enabled: yes
     when: ansible_distribution == "CentOS"
   
-    #fájl művelet ansible-el
+    #FÁJL MŰVELET ANSIBLE-LEL
+    
+    # admin e-mail cím csere
+  - name: change e-mail address for admin
+    tags: apache,centos,httpd
+    lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      regexp: '^ServerAdmin'
+      line: ServerAdmin somebady@somewhere.net
+    when: ansible_distribution == "CentOS"
+    register: httpd #register egy változót definiál, bármit adhatunk pl. pizza
 
+    # httpd újra indítása
+  - name: restart httpd (CentOS)
+    tags: apache,centos,httpd
+    service:
+      name: httpd
+      state: restarted
+    when: httpd.changed #a httpd az amit a register-nél adtunk  
+     
+
+    #fájl másolás a /var/www/html/index.html-be
   - name: copy default html files for site
     tags: apache,apache2,httpd
     copy:
