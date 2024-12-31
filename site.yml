@@ -4,193 +4,48 @@
   become: true
   pre_tasks:
 
-  - name: update repo cache (CentOS) # bootstrap létezése után erre a szövegre módosítottuk
+  - name: update repository index (CentOS) # roles koncepció miatt módosítottuk erre, az eredeti a site_before_role.yml néven mentettük.
     tags: always
     dnf:
-      #update_only: yes #bootstrap.yml után kivesszük innen
       update_cache: yes
-    changed_when: false #bootstrap.yml után
+    changed_when: false #bootstrap.yml miatt
     when: ansible_distribution == "CentOS"
 
-  - name: update repo cache (Ubuntu) # bootstrap létezése után erre a szövegre módosítottuk
+  - name: update repository index (Ubuntu) # roles koncepció miatt módosítottuk erre, az eredeti a site_before_role.yml néven mentettük.
     tags: always
     apt:
-      #upgrade: dist #bootstrap.yml után kivesszük innen
       update_cache: yes
-    changed_when: false #bootstrap.yml után
+    changed_when: false #bootstrap.yml miatt
     when: ansible_distribution == "Ubuntu"
-
-      # user simone létrehozása
-      # bootstrap fájl létrehozása után kikommenteljük
 
 - hosts: all
   become: true
-  tasks:
-
-    #- name: create simone user  
-    # tags: always
-    # user:
-    #   name: simone
-    #   groups: root
-    
-      # ansible ssh kulcs hozzárendlése simone user-hez
-
-    - name: add ssh key (ansible) for simone
-      tags: always
-      authorized_key:
-        user: simone
-        key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPyZqxXktchlggXwlSBpWXX6x04cHtUwVa28ptvgIfF6 ansible"
-
-      # simone user-t hozzáadjuk a sudoer csoporthoz
-      # bootstrap fájl létrehozása után kikommenteljük
-
-  # - name: add sudoers file for simone
-  #    tags: always
-  #   copy:
-  #     src: sudoer_simone
-  #     dest: /etc/sudoers.d/simone
-  #     owner: root
-  #     group: root
-  #     mode: 0440
-    
-      # workstations - unzip és terraform
+  roles: #roles (szabályok), tehát lényegében mostantól tasks helyett roles-t használunk.
+    - base
 
 - hosts: workstations
   become: true
-  tasks:
-
-  - name: install unzip
-    package:
-      name: unzip
-
-  - name: install terraform
-    unarchive:
-      src: https://releases.hashicorp.com/terraform/0.12.28/terraform_0.12.28_linux_amd64.zip
-      dest: /usr/local/bin
-      remote_src: yes
-      mode: 0755
-      owner: root
-      group: root
-
+  roles:
+    - workstations
 
     # web_servers      
 
 - hosts: web_servers
   become: true
-  tasks:  
-    
-  - name: install apache and php for Ubuntu servers
-    tags: apache,apache2,ubuntu
-    apt:
-      name:
-        - apache2
-        - libapache2-mod-php
-      state: latest
-      update_cache: yes
-    when: ansible_distribution == "Ubuntu"
-
-  - name: Start Apache service
-    tags: apache,apache2,ubuntu
-    service:
-      name: apache2
-      state: started
-    when: ansible_distribution == "Ubuntu"
-
-    # CentOS rész
-
-  - name: install httpd and php for CentOS servers
-    tags: apache,centos,httpd
-    dnf:
-      name:
-        - httpd
-        - php
-      state: latest
-      update_cache: yes
-    when: ansible_distribution == "CentOS"
-
-    #apache enable és service indítása CentOS alatt
-
-  - name: Start Httpd service
-    tags: apache,centos,httpd
-    service:
-      name: httpd
-      state: started
-      enabled: yes
-    when: ansible_distribution == "CentOS"
-  
-    #FÁJL MŰVELET ANSIBLE-LEL
-    
-    # admin e-mail cím csere
-  - name: change e-mail address for admin
-    tags: apache,centos,httpd
-    lineinfile:
-      path: /etc/httpd/conf/httpd.conf
-      regexp: '^ServerAdmin'
-      line: ServerAdmin somebady@somewhere.net
-    when: ansible_distribution == "CentOS"
-    register: httpd #register egy változót definiál, bármit adhatunk pl. pizza
-
-    # httpd újra indítása
-  - name: restart httpd (CentOS)
-    tags: apache,centos,httpd
-    service:
-      name: httpd
-      state: restarted
-    when: httpd.changed #a httpd az amit a register-nél adtunk  
-     
-
-    #fájl másolás a /var/www/html/index.html-be
-  - name: copy default html files for site
-    tags: apache,apache2,httpd
-    copy:
-      src: default_site.html
-      dest: /var/www/html/index.html
-      owner: root
-      group: root
-      mode: 0644  
+  roles:
+    - web_servers
 
     # db_servers
 
 - hosts: db_servers
   become: true
-  tasks:
-
-  - name: install mariadb package (CentOS)
-    tags: centos,db,mariadb
-    dnf:
-      name: mariadb
-      state: latest
-    when: ansible_distribution == "CentOS"
-
-  - name: Start mariadb service
-    tags: centos,db,mairadb
-    service:
-      name: mariadb
-      state: started
-    when: ansible_distribution == "CentOS"
-
-  - name: install mariadb package (Ubuntu)
-    tags: db,mariadb,ubuntu
-    apt:
-      name: mariadb-server
-      state: latest
-    when: ansible_distribution == "Ubuntu"
-
-  - name: Start mariadb service
-    tags: db,mariadb,ubuntu
-    service:
-      name: mariadb
-      state: started
-    when: ansible_distribution == "Ubuntu"
+  roles:
+    - db_servers
 
     # file_servers
 
 - hosts: file_servers
   become: true
-  tasks:
+  roles:
+    - file_servers
 
-  - name: install samba package
-    tags: samba
-    package:
-      name: samba
-      state: latest  
