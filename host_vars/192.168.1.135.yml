@@ -1,0 +1,7 @@
+# változók a CentOS rendszer számára
+# 192.168.1.135 egy CentOS szerver ip címe
+apache_package_name: httpd
+apache_service: httpd
+php_package_name: php
+ssh_users: "teszt"
+ssh_template_file: sshd_config_centos.j2

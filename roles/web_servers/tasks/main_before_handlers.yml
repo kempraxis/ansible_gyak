@@ -20,11 +20,17 @@
   lineinfile:
     path: /etc/httpd/conf/httpd.conf
     regexp: '^ServerAdmin'
-    line: ServerAdmin somebady@somewhere.com #handlers miatt csak hogy legyen valami módosítás gyak kedvéért, netről comra módosítjuk.
+    line: ServerAdmin somebady@somewhere.net
   when: ansible_distribution == "CentOS"
-  notify: restart_apache #handlers implementálása miatt register helyett notify-t, apache helyett restart_apache-t raktunk.
+  register: apache #register egy változót definiál, előzör gyaknál httpd most apache, de bármit adhatunk pl. pizza
 
-    # handlers implementálása miatt az apache és httpd újra indítását kivettük.
+    # apache és httpd újra indítása mind a 2 rendszere
+- name: restart httpd
+  tags: apache,httpd
+  service:
+    name: "{{ apache_service  }}"
+    state: restarted
+  when: apache.changed #az apache az amit a register-nél adtunk
 
     #fájl másolás a /var/www/html/index.html-be
 - name: copy default html files for site

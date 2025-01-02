@@ -1,0 +1,5 @@
+#hogy ha a notify-tól megkapta a trigger-t, akkor mit csináljon.
+- name: restart_sshd
+  service:
+    name: sshd
+    state: restarted  
